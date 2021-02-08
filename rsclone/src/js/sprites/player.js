@@ -8,39 +8,22 @@ import {
   DEFAULT_FRICTION_AIR,
   CHARACTERS_DISTANCE_MAX,
   PARTICLES_COLORS,
+  ANIMATION_STATES,
 } from '../constants';
 
 import { playSound, playWalkSound } from '../utils/playSound';
 
-function createPlayerAnimations(scene, key, sprite) {
-  const { anims } = scene;
-  const animStates = {
-    idle: { start: 0, end: 217 },
-    move: { start: 218, end: 254 },
-    jump: { start: 255, end: 316 },
-  };
-
-  Object.entries(animStates).forEach(([name, data]) => {
-    anims.create({
-      key: `${name}-${key}`,
-      frames: anims.generateFrameNumbers(sprite, data),
-      frameRate: 60,
-      repeat: -1,
-    });
-  });
-}
 export default class Player extends Creature {
   constructor(scene, key, x, y, sprite, collisionCategory) {
     super(scene, x, y, sprite, 'player');
-    createPlayerAnimations(scene, key, sprite);
-    this.moving = false;
+    this.key = key;
+    this.createAnimations(sprite);
     this.directions = {
       up: false,
       down: false,
       left: false,
       right: false,
     };
-    this.key = key;
     this.isGrounded = false;
     this.isCarrying = false;
     this.isHeadStanding = false;
@@ -115,6 +98,18 @@ export default class Player extends Creature {
 
     this.landingEvent();
     this.addCollideWorldBoundsListener();
+  }
+
+  createAnimations(sprite) {
+    const { anims } = this.scene;
+    Object.entries(ANIMATION_STATES).forEach(([name, data]) => {
+      anims.create({
+        key: `${name}-${this.key}`,
+        frames: anims.generateFrameNumbers(sprite, data),
+        frameRate: 60,
+        repeat: -1,
+      });
+    });
   }
 
   toggleFinishState() {

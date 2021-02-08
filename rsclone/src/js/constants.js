@@ -18,6 +18,11 @@ export const COLLISION_CATEGORIES = {
   visualParticle: 16,
   physicalParticle: 32,
 };
+export const ANIMATION_STATES = {
+  idle: { start: 0, end: 217 },
+  move: { start: 218, end: 254 },
+  jump: { start: 255, end: 316 },
+};
 export const SERVER_HOST = 'https://ibbobb.herokuapp.com/';
 // export const SERVER_HOST = 'http://localhost';
 export const PLAYER_1_CONTROLS = ['LEFT', 'RIGHT', 'UP', 'DOWN'];
