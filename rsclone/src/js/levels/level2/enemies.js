@@ -22,11 +22,11 @@ export const LEVEL_ENEMIES = [
     ['jump', 120, 250],
   ],
   [
-    ['StandartHedgehog', 2800, 712, 'hedgehog-head', 'hedgehog-halfbutt'],
+    ['StandardHedgehog', 2800, 712, 'hedgehog-head', 'hedgehog-halfbutt'],
     ['moveHorizontally', 45, 'left', 2000],
   ],
   [
-    ['StandartHedgehog', 2530, 672, 'hedgehog-head', 'hedgehog-halfbutt', true],
+    ['StandardHedgehog', 2530, 672, 'hedgehog-head', 'hedgehog-halfbutt', true],
     ['moveHorizontally', 270, 'left', 300],
   ],
 ];

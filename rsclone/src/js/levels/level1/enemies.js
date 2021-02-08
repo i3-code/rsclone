@@ -6,7 +6,7 @@ export const LEVEL_ENEMIES = [
     ['jump', 800, 1200],
   ],
   [
-    ['StandartHedgehog', 1450, 1356, 'hedgehog-head', 'hedgehog-halfbutt'],
+    ['StandardHedgehog', 1450, 1356, 'hedgehog-head', 'hedgehog-halfbutt'],
     ['moveHorizontally', 185, 'left', 1800],
   ],
   // enemies set 2
@@ -36,16 +36,16 @@ export const LEVEL_ENEMIES = [
   ],
   // enemies set 3
   [
-    ['StandartHedgehog', 3400, 1322, 'hedgehog-head', 'hedgehog-halfbutt', true],
+    ['StandardHedgehog', 3400, 1322, 'hedgehog-head', 'hedgehog-halfbutt', true],
     ['moveHorizontally', 300, 'left', 2500, 'Bounce', 'Out'],
   ],
   [
-    ['StandartHedgehog', 3550, 1322, 'hedgehog-head', 'hedgehog-halfbutt', true],
+    ['StandardHedgehog', 3550, 1322, 'hedgehog-head', 'hedgehog-halfbutt', true],
     ['moveHorizontally', 300, 'left', 2500, 'Bounce', 'In'],
   ],
   // enemies set 4
   [
-    ['StandartHedgehog', 4290, 1457, 'hedgehog-head', 'hedgehog-halfbutt'],
+    ['StandardHedgehog', 4290, 1457, 'hedgehog-head', 'hedgehog-halfbutt'],
     ['moveHorizontally', 150, 'left', 1000],
   ],
   [
@@ -60,7 +60,7 @@ export const LEVEL_ENEMIES = [
     ['jump', 150, 1500],
   ],
   [
-    ['StandartHedgehog', 6030, 945, 'hedgehog-head', 'hedgehog-halfbutt'],
+    ['StandardHedgehog', 6030, 945, 'hedgehog-head', 'hedgehog-halfbutt'],
     ['moveHorizontally', 0.1, 'left', 5000],
   ],
   // enemies set 6

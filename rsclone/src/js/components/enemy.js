@@ -1,13 +1,14 @@
-import StandartHedgehog from '../sprites/enemies/standartHedgehog';
+import StandardHedgehog from '../sprites/enemies/standardHedgehog';
 import JumpingHedgehog from '../sprites/enemies/jumpingHedgehog';
 
 const registeredTypes = {
-  StandartHedgehog,
+  StandardHedgehog,
   JumpingHedgehog,
 };
 
 export default class Enemy {
   constructor(type, ...props) {
+    console.log(type);
     return new registeredTypes[type](...props);
   }
 }
