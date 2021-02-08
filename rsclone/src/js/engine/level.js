@@ -45,11 +45,20 @@ export default class Level {
     const { scene } = this;
     this.spawnEnemies();
     this.spawnPlayers();
+    this.registerPortals();
     this.levelEnd = new LevelEnd(scene, end.x, end.y);
     scene.events.off('GameOver');
     scene.events.on('GameOver', this.gameOver, this);
     scene.events.off('update', this.onUpdate, this);
     scene.events.on('update', this.onUpdate, this);
+  }
+
+  registerPortals() {
+    const { portals } = this;
+    portals.forEach((portal) => {
+      portal.addListeners(this.ibb);
+      portal.addListeners(this.obb);
+    });
   }
 
   gameOver() {

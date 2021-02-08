@@ -40,7 +40,6 @@ export default class Player extends Creature {
       left: false,
       right: false,
     };
-    this.portals = scene.level.portals;
     this.key = key;
     this.isGrounded = false;
     this.isCarrying = false;
@@ -110,13 +109,7 @@ export default class Player extends Creature {
       callback: this.onSensorCollide,
       context: this,
     });
-    this.portals.forEach((currPortal) => {
-      const portal = currPortal;
-      if (!portal.sensorCache) portal.sensorCache = {};
-      const cache = portal.sensorCache;
-      if (!cache[this.key]) cache[this.key] = '';
-      this.portalsListeners(scene, portal);
-    });
+
     this.body.restitution = 0.3;
     this.setCollisionCategory(collisionCategory);
 
@@ -229,56 +222,6 @@ export default class Player extends Creature {
     this.isTouching.top = false;
     this.isTouching.bottom = false;
     this.isTouching.center = false;
-  }
-
-  portalsListeners(scene, portal) {
-    scene.matterCollision.addOnCollideEnd({
-      objectA: [
-        this.sensors.left,
-        this.sensors.right,
-        this.sensors.top,
-        this.sensors.bottom,
-      ],
-      objectB: portal,
-      callback: (eventData) => {
-        const sensor = eventData.bodyA;
-        const player = eventData.gameObjectA;
-        this.PortalDiveCheck(sensor, player, portal);
-      },
-      context: this,
-    });
-  }
-
-  PortalDiveCheck(sensor, player, portal) {
-    const cache = portal.sensorCache;
-    const { label } = sensor;
-    if (label === 'body-center') return;
-    const prevSensor = cache[player.key];
-    if (prevSensor !== label) {
-      if (portal.isVertical && (label === 'body-top' || label === 'body-bottom')) return;
-      if (!portal.isVertical && (label === 'body-left' || label === 'body-right')) return;
-      if (!prevSensor) {
-        cache[player.key] = label;
-        return;
-      }
-      this.portalDive(portal);
-    }
-  }
-
-  portalDive(portal) {
-    portal.emitParticles(
-      this.x, this.y,
-      this.width, this.height,
-      this.body.velocity,
-      this.isRotated,
-    );
-    this.scene.time.addEvent({
-      delay: 10,
-      callback: () => {
-        playSound(this.scene, 'warp_cross');
-        this.switchGravity(portal.isVertical);
-      },
-    });
   }
 
   rotatePlayer() {

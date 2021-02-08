@@ -1,10 +1,14 @@
 import Phaser from 'phaser';
+
+import { playSound } from '../utils/playSound';
 import { COLLISION_CATEGORIES, PARTICLES_COLORS } from '../constants';
 
 export default class Portal extends Phaser.GameObjects.Rectangle {
   constructor(scene, x, y, width, height, color, isVertical, objSettings, collisionGroup) {
     super(scene, x, y, width, height, color); // new Rectangle()
+    this.scene = scene;
     this.depth = 200;
+    this.sensorCache = { ibb: '', obb: '' };
     scene.matter.add.gameObject(this, objSettings);
     if (collisionGroup) {
       this.collisionGroup = collisionGroup;
@@ -143,5 +147,54 @@ export default class Portal extends Phaser.GameObjects.Rectangle {
     setTimeout(() => {
       passingEmitter.remove();
     }, lifespanTime);
+  }
+
+  addListeners(player) {
+    this.scene.matterCollision.addOnCollideEnd({
+      objectA: [
+        player.sensors.left,
+        player.sensors.right,
+        player.sensors.top,
+        player.sensors.bottom,
+      ],
+      objectB: this,
+      callback: (eventData) => {
+        const sensor = eventData.bodyA;
+        this.PortalDiveCheck(sensor, player);
+      },
+      context: this,
+    });
+  }
+
+  PortalDiveCheck(sensor, player) {
+    const cache = this.sensorCache;
+    const { label } = sensor;
+    if (label === 'body-center') return;
+    const prevSensor = cache[player.key];
+    if (prevSensor !== label) {
+      if (this.isVertical && (label === 'body-top' || label === 'body-bottom')) return;
+      if (!this.isVertical && (label === 'body-left' || label === 'body-right')) return;
+      if (!prevSensor) {
+        cache[player.key] = label;
+        return;
+      }
+      this.portalDive(player);
+    }
+  }
+
+  portalDive(player) {
+    this.emitParticles(
+      player.x, player.y,
+      player.width, player.height,
+      player.body.velocity,
+      player.isRotated,
+    );
+    this.scene.time.addEvent({
+      delay: 10,
+      callback: () => {
+        playSound(this.scene, 'warp_cross');
+        player.switchGravity(this.isVertical);
+      },
+    });
   }
 }
