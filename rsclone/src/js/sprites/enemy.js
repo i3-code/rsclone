@@ -1,10 +1,9 @@
 import Phaser from 'phaser';
-import Death from './death';
+import Creature from './creature';
 
-export default class Enemy extends Phaser.Physics.Matter.Sprite {
-  constructor(scene, x, y, spriteA) {
-    super(scene.matter.world, x, y, spriteA);
-    this.isAlive = true;
+export default class Enemy extends Creature {
+  constructor(scene, x, y, sprite) {
+    super(scene, x, y, sprite, 'enemy');
     this.startX = x;
     this.startY = y;
   }
@@ -12,16 +11,13 @@ export default class Enemy extends Phaser.Physics.Matter.Sprite {
   killPlayer(pair) {
     if (pair.gameObjectB && (pair.gameObjectB.key === 'ibb' || pair.gameObjectB.key === 'obb') && pair.gameObjectB.isAlive) {
       const player = pair.gameObjectB;
-      player.isAlive = false;
-      Death.deathAnimation(this.scene, player, 'player');
+      player.die();
       this.scene.time.addEvent({
         delay: 1500,
         callback: () => {
           const anotherPlayerKey = player.key === 'ibb' ? 'obb' : 'ibb';
-          if (this.scene.level[anotherPlayerKey].isAlive) {
-            this.scene.level[anotherPlayerKey].isAlive = false;
-            Death.deathAnimation(this.scene, this.scene.level[anotherPlayerKey], 'player');
-          }
+          const anotherPlayer = this.scene.level[anotherPlayerKey];
+          if (anotherPlayer.isAlive) anotherPlayer.die();
         },
       });
     }
@@ -29,8 +25,7 @@ export default class Enemy extends Phaser.Physics.Matter.Sprite {
 
   gotKilled(pair) {
     if (pair.gameObjectB && pair.gameObjectB.type !== 'Rectangle' && pair.gameObjectB.isAlive && this.isAlive) {
-      this.isAlive = false;
-      Death.deathAnimation(this.scene, this, 'enemy');
+      this.die();
       this.scene.events.emit('updateScore', 100);
     }
   }

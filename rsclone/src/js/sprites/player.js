@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import Death from './death';
+
+import Creature from './creature';
 
 import {
   DEFAULT_MASS,
@@ -32,10 +33,9 @@ function createPlayerAnimations(scene, key, sprite) {
     repeat: -1,
   });
 }
-export default class Player extends Phaser.Physics.Matter.Sprite {
+export default class Player extends Creature {
   constructor(scene, key, x, y, sprite, collisionCategory) {
-    super(scene.matter.world, x, y, sprite);
-    this.scene = scene;
+    super(scene, x, y, sprite, 'player');
     createPlayerAnimations(scene, key, sprite);
     this.moving = false;
     this.directions = {
@@ -45,7 +45,6 @@ export default class Player extends Phaser.Physics.Matter.Sprite {
       right: false,
     };
     this.portals = scene.level.portals;
-    this.isAlive = true;
     this.key = key;
     this.isGrounded = false;
     this.isCarrying = false;
@@ -166,16 +165,13 @@ export default class Player extends Phaser.Physics.Matter.Sprite {
   kill(pair) {
     if (pair.gameObjectB && (pair.gameObjectB.key === 'ibb' || pair.gameObjectB.key === 'obb') && pair.gameObjectB.isAlive) {
       const player = pair.gameObjectB;
-      player.isAlive = false;
-      Death.deathAnimation(this.scene, player, 'player');
+      player.die();
       this.scene.time.addEvent({
         delay: 500,
         callback: () => {
           const anotherPlayerKey = player.key === 'ibb' ? 'obb' : 'ibb';
-          if (this.scene.level[anotherPlayerKey].isAlive) {
-            this.scene.level[anotherPlayerKey].isAlive = false;
-            Death.deathAnimation(this.scene, this.scene.level[anotherPlayerKey], 'player');
-          }
+          const anotherPlayer = this.scene.level[anotherPlayerKey];
+          if (anotherPlayer.isAlive) anotherPlayer.die();
         },
       });
     }
