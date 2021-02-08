@@ -14,23 +14,19 @@ import { playSound, playWalkSound } from '../utils/playSound';
 
 function createPlayerAnimations(scene, key, sprite) {
   const { anims } = scene;
-  anims.create({
-    key: `idle-${key}`,
-    frames: anims.generateFrameNumbers(sprite, { start: 0, end: 217 }),
-    frameRate: 60,
-    repeat: -1,
-  });
-  anims.create({
-    key: `move-${key}`,
-    frames: anims.generateFrameNumbers(sprite, { start: 218, end: 254 }),
-    frameRate: 60,
-    repeat: -1,
-  });
-  anims.create({
-    key: `jump-${key}`,
-    frames: anims.generateFrameNumbers(sprite, { start: 255, end: 316 }),
-    frameRate: 60,
-    repeat: -1,
+  const animStates = {
+    idle: { start: 0, end: 217 },
+    move: { start: 218, end: 254 },
+    jump: { start: 255, end: 316 },
+  };
+
+  Object.entries(animStates).forEach(([name, data]) => {
+    anims.create({
+      key: `${name}-${key}`,
+      frames: anims.generateFrameNumbers(sprite, data),
+      frameRate: 60,
+      repeat: -1,
+    });
   });
 }
 export default class Player extends Creature {
