@@ -53,8 +53,7 @@ class Main {
       menuGame: document.getElementById('menuGame'),
     };
 
-    const page = this.getCurrPage();
-    this.changeAddress(page);
+    this.checkAddress();
     this.navigate();
     this.checkLang();
     this.changeLang();
@@ -101,10 +100,8 @@ class Main {
           mapping: 'matterCollision',
         }],
       },
-      fps: {
-        target: 60,
-        forceSetTimeOut: true,
-      },
+      fps: { forceSetTimeOut: true },
+      render: { roundPixels: true },
       scene: SCENES,
       dom: { createContainer: true, behindCanvas: true },
       input: {
@@ -151,10 +148,12 @@ class Main {
     });
   }
 
-  changeAddress(link) {
-    const href = window.location.href.replace(/#(.*)/ig, '');
-    window.location = `${href}#${link}`;
-    this.highlightPage(link);
+  checkAddress() {
+    const { hash } = window.location;
+    if (!hash || hash === '#') {
+      const newHash = this.getCurrPage();
+      window.history.pushState(null, null, `#${newHash}`);
+    }
   }
 
   getCurrPage() {
@@ -194,10 +193,22 @@ class Main {
     this.highlightPage(nextLink);
     window.scroll(0, 0);
     if (this.elements.header.classList.contains('header__display')) this.toggleBurger();
+    this.toggleGame(nextLink === 'game');
+  }
 
-    if (nextLink === 'game' && !this.game) this.spawnGame();
-    if (nextLink !== 'game' && this.game) this.game.pause();
-    if (nextLink === 'game' && this.game) this.game.continue();
+  toggleGame(toGame) {
+    if (toGame && !this.game) {
+      this.spawnGame();
+      return;
+    }
+    if (!this.game) return;
+    if (toGame && this.game.isPaused) {
+      this.game.isPaused = false;
+      this.game.continue();
+      return;
+    }
+    this.game.pause();
+    this.game.isPaused = true;
   }
 }
 
