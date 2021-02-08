@@ -8,7 +8,6 @@ const registeredTypes = {
 
 export default class Enemy {
   constructor(type, ...props) {
-    console.log(type);
     return new registeredTypes[type](...props);
   }
 }
