@@ -21,13 +21,8 @@ export default class Client extends Phaser.Events.EventEmitter {
     // this.socket.on('disconnect', () => console.log('client disconnected'));
     this.socket.on('connect_error', () => console.log('Connection Failed'));
 
-    this.socket.on('hostGameSuccess', (sessionName) => {
-      if (sessionName) this.emit('hostGameSuccess', sessionName);
-    });
-
-    this.socket.on('requestGamesSuccess', (sessionNames) => {
-      if (sessionNames) this.emit('requestGamesSuccess', sessionNames);
-    });
+    this.socket.on('hostRoom', (name) => this.emit('hostRoom', name));
+    this.socket.on('getRooms', (rooms) => this.emit('getRooms', rooms));
 
     this.socket.on('startGame', (gameData) => this.emit('startGame', gameData));
     this.socket.on('gameReady', (sessionName) => this.emit('gameReady', sessionName));

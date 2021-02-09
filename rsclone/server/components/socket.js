@@ -7,15 +7,15 @@ function generatePostfix() {
 module.exports = class Socket {
   constructor(server, db) {
     this.db = db;
-    this.sessions = {};
+    this.rooms = {};
     this.io = socketIO(server, { cors: { origin: '*' } });
     this.io.on('connection', (socket) => {
       socket.on('playerMove', (data) => this.onPlayerMove(socket, data));
       socket.on('playerSync', (data) => this.onPlayerSync(socket, data));
-      socket.on('requestHostGame', () => this.onRequestHostGame(socket));
-      socket.on('requestGames', () => this.onRequestGames(socket));
-      socket.on('requestDropGame', () => this.onDisconnect(socket));
-      socket.on('joinGame', (sessionName) => this.onJoinGame(socket, sessionName));
+      socket.on('hostRoom', () => this.onHostRoom(socket));
+      socket.on('getRooms', () => this.onGetRooms(socket));
+      socket.on('dropGame', () => this.onDisconnect(socket));
+      socket.on('joinRoom', (name) => this.onJoinRoom(socket, name));
       socket.on('requestStartGame', (sessionName) => this.onRequestStartGame(socket, sessionName));
       socket.on('disconnect', () => this.onDisconnect(socket));
       socket.on('checkScore', (data) => this.onCheckScore(socket, data));
@@ -91,80 +91,66 @@ module.exports = class Socket {
   }
 
   onPlayerMove(socket, data) {
-    Object.values(this.sessions).forEach((session) => {
-      if (session && session.playerOneSocket && session.playerTwoSocket) {
-        if (session.playerOneSocket.id === socket.id || session.playerTwoSocket.id === socket.id) {
-          session.playerOneSocket.emit('playerMove', data);
-          session.playerTwoSocket.emit('playerMove', data);
+    Object.values(this.rooms).forEach((room) => {
+      if (room && room.playerOneSocket && room.playerTwoSocket) {
+        if (room.playerOneSocket.id === socket.id || room.playerTwoSocket.id === socket.id) {
+          room.playerOneSocket.emit('playerMove', data);
+          room.playerTwoSocket.emit('playerMove', data);
         }
       }
     });
   }
 
   onPlayerSync(socket, data) {
-    Object.values(this.sessions).forEach((session) => {
-      if (session && session.playerOneSocket && session.playerTwoSocket) {
-        if (session.playerOneSocket.id === socket.id || session.playerTwoSocket.id === socket.id) {
-          session.playerOneSocket.emit('playerSync', data);
-          session.playerTwoSocket.emit('playerSync', data);
+    Object.values(this.rooms).forEach((room) => {
+      if (room && room.playerOneSocket && room.playerTwoSocket) {
+        if (room.playerOneSocket.id === socket.id || room.playerTwoSocket.id === socket.id) {
+          room.playerOneSocket.emit('playerSync', data);
+          room.playerTwoSocket.emit('playerSync', data);
         }
       }
     });
   }
 
-  onRequestHostGame(socket) {
-    if (!this.sessions[socket.id]) this.sessions[socket.id] = { gameReady: {} };
-    const session = this.sessions[socket.id];
+  onHostRoom(socket) {
+    if (!this.rooms[socket.id]) this.rooms[socket.id] = {};
+    const room = this.rooms[socket.id];
 
     const postfix = generatePostfix();
-    if (!session.name) session.name = `game#${postfix}`;
+    if (!room.name) room.name = `game#${postfix}`;
 
-    if (!session.playerOneSocket || session.playerOneSocket.id !== socket.id) {
-      session.playerOneSocket = socket;
+    if (!room.playerOneSocket || room.playerOneSocket.id !== socket.id) {
+      room.playerOneSocket = socket;
     }
 
-    if (session.playerTwoSocket) {
-      session.playerTwoSocket.emit('dropGame');
-      session.playerTwoSocket = undefined;
+    if (room.playerTwoSocket) {
+      room.playerTwoSocket.emit('dropGame');
+      room.playerTwoSocket = undefined;
     }
 
-    session.playerOneSocket.emit('hostGameSuccess', session.name);
+    room.playerOneSocket.emit('hostRoom', room.name);
   }
 
-  onRequestGames(socket) {
-    const sessionNames = [];
-    Object.values(this.sessions).forEach((session) => {
-      if (session && session.name && !session.playerTwoSocket) sessionNames.push(session.name);
+  onGetRooms(socket) {
+    const rooms = [];
+    Object.values(this.rooms).forEach((room) => {
+      if (room && room.name && !room.playerTwoSocket) rooms.push(room.name);
     });
-    socket.emit('requestGamesSuccess', sessionNames);
+    socket.emit('getRooms', rooms);
   }
 
   onDisconnect(socket) {
-    if (this.sessions[socket.id]) this.sessions[socket.id] = undefined;
+    if (this.rooms[socket.id]) this.rooms[socket.id] = undefined;
   }
 
-  onJoinGame(socket, sessionName) {
-    Object.values(this.sessions).forEach((session) => {
-      if (session && session.name && session.name === sessionName) {
-        const currentSession = session;
-        currentSession.playerTwoSocket = socket;
-        currentSession.playerOneSocket.emit('gameReady', session.name);
-        currentSession.playerTwoSocket.emit('gameReady', session.name);
-      }
-    });
-  }
-
-  onRequestStartGame(socket, sessionName) {
-    Object.values(this.sessions).forEach((session) => {
-      if (session && session.name && session.name === sessionName) {
-        const currentSession = session;
-        const currentSocket = (currentSession.playerOneSocket.id === socket.id)
-          ? 'playerOneSocket' : 'playerTwoSocket';
-
-        currentSession.gameReady[currentSocket] = true;
-        if (currentSession.gameReady.playerOneSocket && currentSession.gameReady.playerTwoSocket) {
-          currentSession.playerOneSocket.emit('startGame', { online: true, master: true });
-          currentSession.playerTwoSocket.emit('startGame', { online: true, master: false });
+  onJoinRoom(socket, name) {
+    Object.values(this.rooms).forEach((room) => {
+      if (room && room.name && room.name === name) {
+        const currentRoom = room;
+        currentRoom.playerTwoSocket = socket;
+        if (currentRoom.playerOneSocket && currentRoom.playerTwoSocket) {
+          currentRoom.playerOneSocket.emit('startGame', { online: true, master: true });
+          currentRoom.playerTwoSocket.emit('startGame', { online: true, master: false });
         }
       }
     });

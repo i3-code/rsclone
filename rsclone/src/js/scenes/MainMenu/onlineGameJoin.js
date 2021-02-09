@@ -12,57 +12,43 @@ export default class MainMenuOnlineGame extends Phaser.Scene {
 
   create() {
     createImg(this);
-    let menuItems = {
-      'Looking for a partner...': '',
+    const menuItems = {
+      'Looking for a game...': '',
     };
     const menuCallBack = () => {
-      this.client.sendData('requestDropGame');
+      this.client.sendData('dropGame');
       this.scene.start('MainMenuOnlineGame');
     };
     this.menu = new Menu(this, menuItems, true, menuCallBack);
-
     this.client = this.game.client;
-    this.client.off('requestGamesSuccess');
-    this.client.on('requestGamesSuccess', (sessionNames) => {
-      this.menu.spawn.destroy();
-      menuItems = {};
-      sessionNames.forEach((sessionName) => {
-        menuItems[sessionName] = () => this.joinGame(sessionName);
-      });
-      if (!sessionNames.length) menuItems['No games hosted'] = '';
-      this.menu = new Menu(this, menuItems, true, menuCallBack);
-    });
-    this.client.off('gameReady');
-    this.client.on('gameReady', (sessionName) => {
-      this.menu.spawn.destroy();
-      menuItems = {};
-      menuItems[`${sessionName} ready!`] = () => this.requestStartGame(sessionName);
-      this.menu = new Menu(this, menuItems, true, menuCallBack);
-    });
-    this.client.off('startGame');
-    this.client.on('startGame', (gameData) => this.startGame(gameData));
-    this.requestJoinGame();
+
+    this.client.once('getRooms', this.onGetRooms, this);
+    this.client.once('startGame', this.onStartGame, this);
+    this.client.sendData('getRooms');
   }
 
-  startGame(gameData) {
+  onGetRooms(rooms) {
+    if (this.menu) {
+      if (rooms && rooms.length) {
+        this.menu.spawn.destroy();
+        const menuItems = {};
+        rooms.forEach((room) => {
+          menuItems[room] = () => this.client.sendData('joinRoom', room);
+        });
+        this.menu = new Menu(this, menuItems, true, this.menuCallBack);
+        return;
+      }
+      if (!rooms || !rooms.length) this.menu.items[0].node.innerHTML = 'No rooms found...';
+    }
+  }
+
+  onStartGame(gameData) {
     this.game.level = 1;
     this.game.app.settings.level = 1;
     this.game.app.settings.score = 0;
     this.game.app.settings.time = 0;
     this.game.app.saveSettings();
     this.scene.start('Level1', gameData);
-  }
-
-  requestJoinGame() {
-    this.client.sendData('requestGames');
-  }
-
-  joinGame(sessionName) {
-    this.client.sendData('joinGame', sessionName);
-  }
-
-  requestStartGame(sessionName) {
-    this.client.sendData('requestStartGame', sessionName);
   }
 
   update() {

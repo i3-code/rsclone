@@ -12,46 +12,38 @@ export default class MainMenuOnlineGame extends Phaser.Scene {
 
   create() {
     createImg(this);
-    let menuItems = {
-      'Looking for a partner...': '',
+    const menuItems = {
+      'Creating game...': '',
     };
     const menuCallBack = () => {
-      this.client.sendData('requestDropGame');
+      this.client.sendData('dropGame');
       this.scene.start('MainMenuOnlineGame');
     };
     this.menu = new Menu(this, menuItems, true, menuCallBack);
     this.client = this.game.client;
-    this.client.off('hostGameSuccess');
-    this.client.on('hostGameSuccess', (sessionName) => {
-      this.menu.items[0].node.innerHTML = `${sessionName} awaiting connection...`;
-    });
-    this.client.off('gameReady');
-    this.client.on('gameReady', (sessionName) => {
-      this.menu.spawn.destroy();
-      menuItems = {};
-      menuItems[`${sessionName} ready!`] = () => this.requestStartGame(sessionName);
-      this.menu = new Menu(this, menuItems, true, menuCallBack);
-    });
-    this.client.off('startGame');
-    this.client.on('startGame', (gameData) => this.startGame(gameData));
-    this.requestHostGame();
+
+    this.client.once('hostRoom', this.onHostRoom, this);
+    this.client.once('startGame', this.onStartGame, this);
+    this.client.sendData('hostRoom');
   }
 
-  startGame(gameData) {
+  onHostRoom(name) {
+    if (this.menu) {
+      if (name) {
+        this.menu.items[0].node.innerHTML = `${name} ready!`;
+        return;
+      }
+      this.menu.items[0].node.innerHTML = 'No free rooms...';
+    }
+  }
+
+  onStartGame(gameData) {
     this.game.level = 1;
     this.game.app.settings.level = 1;
     this.game.app.settings.score = 0;
     this.game.app.settings.time = 0;
     this.game.app.saveSettings();
     this.scene.start('Level1', gameData);
-  }
-
-  requestHostGame() {
-    this.client.sendData('requestHostGame');
-  }
-
-  requestStartGame(sessionName) {
-    this.client.sendData('requestStartGame', sessionName);
   }
 
   update() {
