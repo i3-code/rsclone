@@ -10,6 +10,7 @@ export default class Creature extends Phaser.Physics.Matter.Sprite {
     this.scene = scene;
     this.isAlive = true;
     this.type = type;
+    this.initData();
   }
 
   die() {
@@ -43,5 +44,21 @@ export default class Creature extends Phaser.Physics.Matter.Sprite {
       default:
         break;
     }
+  }
+
+  initData() {
+    const { x, y, angle } = this;
+    this.setData({ x, y, angle });
+  }
+
+  updateData() {
+    const { x, y, angle } = this;
+    const intX = parseInt(x, 10);
+    const intY = parseInt(y, 10);
+    const checkList = { x: intX, y: intY, angle };
+    Object.entries(checkList).forEach(([key, value]) => {
+      const oldValue = this.data.get(key);
+      if (value !== oldValue) this.data.set(key, value);
+    });
   }
 }

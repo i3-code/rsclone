@@ -5,6 +5,7 @@ export default class Network {
     this.scene = scene;
     this.client = scene.client;
     this.initSync = this.initSync.bind(this);
+
     if (this.client) {
       this.client.off('newRecord');
       this.client.on('newRecord', (data) => {
@@ -18,14 +19,24 @@ export default class Network {
   }
 
   initSync() {
+    const { playerKey } = this.scene;
+    const player = this.scene.level[playerKey];
+    this.player = player;
     this.client.off('playerMove');
     this.client.on('playerMove', this.onPlayerMove, this);
 
     this.client.off('playerSync');
     this.client.on('playerSync', this.onPlayerSync, this);
 
-    this.scene.events.off('update', this.sync, this);
-    this.scene.events.on('update', this.sync, this);
+    player.data.events.on('changedata', this.onChangeData, this);
+
+    this.scene.events.off('update', this.onUpdate, this);
+    this.scene.events.on('update', this.onUpdate, this);
+  }
+
+  onChangeData(player, key, value) {
+    const name = player.key;
+    this.client.sendData('playerSync', { name, key, value });
   }
 
   onPlayerMove(data) {
@@ -34,40 +45,14 @@ export default class Network {
   }
 
   onPlayerSync(data) {
-    const {
-      playerKey,
-      x,
-      y,
-      angle,
-      disableGravitySwitch,
-    } = data;
-    const character = this.scene.level[playerKey];
-    if (character && character.body) {
-      if (character.x && character.x !== x) character.x = x;
-      if (character.y && character.y !== y) character.y = y;
-      if (character.angle && character.angle !== angle) character.angle = angle;
-      if (character.disableGravitySwitch
-            && character.disableGravitySwitch !== disableGravitySwitch) {
-        character.disableGravitySwitch = disableGravitySwitch;
-      }
-    }
+    const { name, key, value } = data;
+    const player = this.scene.level[name];
+    const oldValue = player[key];
+    if (oldValue && oldValue !== value) player[key] = value;
   }
 
-  sync() {
-    if (this.throttle) return;
-    this.throttle = true;
-    const { playerKey } = this.scene;
-    const player = this.scene.level[this.scene.playerKey];
-    if (player && player.body) {
-      const playerData = {
-        playerKey,
-        x: player.x,
-        y: player.y,
-        angle: player.angle,
-        disableGravitySwitch: player.disableGravitySwitch,
-      };
-      this.client.sendData('playerSync', playerData);
-    }
-    setTimeout(() => { this.throttle = false; }, THROTTLE_DELAY);
+  onUpdate() {
+    const { player } = this;
+    if (player && player.body) player.updateData();
   }
 }
