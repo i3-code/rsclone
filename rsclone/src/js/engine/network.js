@@ -23,6 +23,7 @@ export default class Network {
     this.client.off('playerMove');
     this.client.on('playerMove', this.onPlayerMove, this);
 
+    /*
     this.client.off('playerSync');
     this.client.on('playerSync', this.onPlayerSync, this);
 
@@ -31,6 +32,7 @@ export default class Network {
 
     this.scene.events.off('update', this.onUpdate, this);
     this.scene.events.on('update', this.onUpdate, this);
+    */
   }
 
   onChangeData(player, key, value) {
