@@ -1,5 +1,3 @@
-import { THROTTLE_DELAY } from '../constants';
-
 export default class Network {
   constructor(scene) {
     this.scene = scene;
@@ -28,6 +26,7 @@ export default class Network {
     this.client.off('playerSync');
     this.client.on('playerSync', this.onPlayerSync, this);
 
+    player.data.events.off('changedata');
     player.data.events.on('changedata', this.onChangeData, this);
 
     this.scene.events.off('update', this.onUpdate, this);
@@ -48,7 +47,19 @@ export default class Network {
     const { name, key, value } = data;
     const player = this.scene.level[name];
     const oldValue = player[key];
-    if (oldValue && oldValue !== value) player[key] = value;
+    if (oldValue && oldValue !== value) {
+      const timeDelta = Date.now() - player.time[key];
+      const tween = {
+        targets: player,
+        [key]: { from: oldValue, to: value },
+        ease: 'Linear',
+        duration: timeDelta,
+        repeat: 0,
+        yoyo: false,
+      };
+      this.scene.tweens.add(tween);
+      player.updateData();
+    }
   }
 
   onUpdate() {

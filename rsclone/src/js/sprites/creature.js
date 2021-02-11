@@ -48,17 +48,28 @@ export default class Creature extends Phaser.Physics.Matter.Sprite {
 
   initData() {
     const { x, y, angle } = this;
+    const time = Date.now();
+    this.time = {
+      x: time,
+      y: time,
+      angle: time,
+    };
     this.setData({ x, y, angle });
   }
 
   updateData() {
+    if (!this.body) return;
     const { x, y, angle } = this;
-    const intX = parseInt(x, 10);
-    const intY = parseInt(y, 10);
-    const checkList = { x: intX, y: intY, angle };
+    // const intX = parseInt(x, 10);
+    // const intY = parseInt(y, 10);
+    const checkList = { x, y, angle };
     Object.entries(checkList).forEach(([key, value]) => {
       const oldValue = this.data.get(key);
-      if (value !== oldValue) this.data.set(key, value);
+      if (value !== oldValue) {
+        const time = Date.now();
+        this.data.set(key, value);
+        this.time[key] = time;
+      }
     });
   }
 }
